@@ -33,4 +33,53 @@ CHIP CPU {
 
     PARTS:
 	//// Replace this comment with your code.
+    
+    And(a=instruction[3],b=instruction[15],out=writeM);
+
+    Mux16(a=instruction, b=aluoutput, sel=instruction[15], out=out1);
+
+    And(a=instruction[5],b=instruction[15],out=cinsload);
+    Not(in=instruction[15],out=ainsload);
+    Or(a=cinsload,b=ainsload,out=aload);
+    ARegister(in=out1, load=aload, out=aoutput,out[0..14]=addressM);
+
+    And(a=instruction[15],b=instruction[4],out=dload);
+    DRegister(in=aluoutput, load=dload, out=doutput);
+
+    Mux16(a=aoutput, b=inM, sel=instruction[12], out=aoutput2);
+    ALU(x=doutput, y=aoutput2, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outM,out=aluoutput,zr=zrout, ng=ngout);
+
+
+    
+    //JMP
+    DMux8Way(in=zrout, sel=instruction[0..2], a=dmux0, b=dmux1, c=dmux2, d=dmux3, e=dmux4, f=dmux5, g=dmux6, h=dmux7);
+    DMux8Way(in=ngout, sel=instruction[0..2], a=dmux0ng, b=dmux1ng, c=dmux2ng, d=dmux3ng, e=dmux4ng, f=dmux5ng, g=dmux6ng, h=dmux7ng);
+
+    //j1 j2 j3=0 0 1
+    Not(in=dmux1,out=dmux1not);
+    Not(in=dmux1ng,out=dmux1ngnot);
+    And(a=dmux1not,b=dmux1ngnot,out=jmp1);
+
+    //j1 j2 j3=0 1 0
+    Or(a=false,b=zrout,out=jmp2);
+    
+    //j1 j2 j3=0 1 1
+    Not(in=dmux3ng,out=dmux3ngnot);
+    Or(a=dmux3,b=dmux3ngnot,out=jmp3);
+
+    //j1 j2 j3=1 0 0
+    Or(a=false,b=dmux4ng,out=jmp4);
+
+    //j1 j2 j3=1 0 1
+    Not(in=dmux5,out=jmp5);
+
+    //j1 j2 j3=1 1 0
+    Or(a=dmux6,b=dmux6ng,out=jmp6);
+
+    //Mux by instruction[0..2]
+    Mux8Way(a=false, b=jmp1, c=jmp2, d=jmp3, e=jmp4, f=jmp5, g=jmp6, h=true, sel=instruction[0..2], out=jmpout);
+    
+    //only C instruction can jump
+    And(a=jmpout,b=instruction[15],out=pcload);
+    PC(in=aoutput, load=pcload, inc=true, reset=reset, out[0..14]=pc);
 }
