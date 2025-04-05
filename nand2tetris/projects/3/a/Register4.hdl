@@ -1,0 +1,14 @@
+CHIP Register4 {
+    IN  in[4],load;
+    OUT out[4];
+    
+    PARTS:
+    Mux(a=outold0, b=in[0], sel=load, out=t0);
+    Mux(a=outold1, b=in[1], sel=load, out=t1);
+    Mux(a=outold2, b=in[2], sel=load, out=t2);
+    Mux(a=outold3, b=in[3], sel=load, out=t3);
+    DFF(in=t0,out=out[0],out=outold0);
+    DFF(in=t1,out=out[1],out=outold1);
+    DFF(in=t2,out=out[2],out=outold2);
+    DFF(in=t3,out=out[3],out=outold3);
+}
