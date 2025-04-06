@@ -1,0 +1,65 @@
+#include"code.h"
+code::code(){
+    dest_table[""]=bitset<3>(0);
+    dest_table["M"]=bitset<3>(1);
+    dest_table["D"]=bitset<3>(2);
+    dest_table["MD"]=bitset<3>(3);
+    dest_table["A"]=bitset<3>(4);
+    dest_table["AM"]=bitset<3>(5);
+    dest_table["AD"]=bitset<3>(6);
+    dest_table["AMD"]=bitset<3>(7);
+
+    comp_table["0"]=bitset<7>("0101010");
+    comp_table["1"]=bitset<7>("0111111");
+    comp_table["-1"]=bitset<7>("0111010");
+    comp_table["D"]=bitset<7>("0001100");
+    comp_table["A"]=bitset<7>("0110000");
+    comp_table["M"]=bitset<7>("1110000");
+    comp_table["!D"]=bitset<7>("0001101");
+    comp_table["!A"]=bitset<7>("0110001");
+    comp_table["!M"]=bitset<7>("1110001");
+    comp_table["-D"]=bitset<7>("0001111");
+    comp_table["-A"]=bitset<7>("0110011");
+    comp_table["-M"]=bitset<7>("1110011");
+    comp_table["D+1"]=bitset<7>("0011111");
+    comp_table["A+1"]=bitset<7>("0110111");
+    comp_table["M+1"]=bitset<7>("1110111");
+    comp_table["D-1"]=bitset<7>("0001110");
+    comp_table["A-1"]=bitset<7>("0110010");
+    comp_table["M-1"]=bitset<7>("1110010");
+    comp_table["D+A"]=bitset<7>("0000010");
+    comp_table["D+M"]=bitset<7>("1000010");
+    comp_table["D-A"]=bitset<7>("0010011");
+    comp_table["D-M"]=bitset<7>("1010011");
+    comp_table["A-D"]=bitset<7>("0000111");
+    comp_table["M-D"]=bitset<7>("1000111");
+    comp_table["D&A"]=bitset<7>("0000000");
+    comp_table["D&M"]=bitset<7>("1000000");
+    comp_table["D|A"]=bitset<7>("0010101");
+    comp_table["D|M"]=bitset<7>("1010101");
+
+    jmp_table[""]=bitset<3>(0);
+    jmp_table["JGT"]=bitset<3>(1);
+    jmp_table["JEQ"]=bitset<3>(2);
+    jmp_table["JGE"]=bitset<3>(3);
+    jmp_table["JLT"]=bitset<3>(4);
+    jmp_table["JNE"]=bitset<3>(5);
+    jmp_table["JLE"]=bitset<3>(6);
+    jmp_table["JMP"]=bitset<3>(7);
+}
+string code::get_binary_code(parser p){
+    if(p.get_type()==0){
+        bitset<15> bs(stoi(p.get_address()));
+        binary_code='0'+bs.to_string();
+    }
+    else{
+        binary_code="111";
+        binary_code+=comp_table[p.get_comp()].to_string()
+            +dest_table[p.get_dest()].to_string()
+            +jmp_table[p.get_jmp()].to_string();
+    }
+    return binary_code;
+}
+code::~code()
+{
+}
