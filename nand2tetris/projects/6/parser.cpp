@@ -20,28 +20,6 @@ bool parser::has_more_commands(ifstream& in){
     }
     return false;
 }
-vector<string> parser::split_instruction(const std::string& str, const std::string& delimiters){
-    std::vector<std::string> tokens;
-    std::string token;
-    size_t start = 0;
-    size_t end = 0;
-
-    while ((end = str.find_first_of(delimiters, start)) != std::string::npos) {
-        token = str.substr(start, end - start);
-        if (!token.empty()) {
-            tokens.push_back(token);
-        }
-        start = end + 1;
-    }
-
-    // 添加最后一部分
-    token = str.substr(start);
-    if (!token.empty()) {
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
 void parser::parse(symbol_table symtab){
     set_address("");set_comp("");set_dest("");set_jmp("");
     if(instruction[0]=='@'){
@@ -52,9 +30,9 @@ void parser::parse(symbol_table symtab){
         }else{
             //query to symbol table
             if(symtab.is_exist(s)){
-
+                set_address(std::to_string(symtab.get_variable(s)));
             }else{
-                symtab.add_variable(s,line);
+                symtab.add_variable(s,symtab.var_addr++);
             }
         }
     }else{

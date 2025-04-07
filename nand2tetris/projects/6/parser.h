@@ -34,5 +34,4 @@ public:
     int get_type();
     ~parser();
 private:
-    vector<string> split_instruction(const std::string& str, const std::string& delimiters);
 };

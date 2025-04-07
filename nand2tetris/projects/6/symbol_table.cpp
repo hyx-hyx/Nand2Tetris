@@ -50,6 +50,10 @@ bool symbol_table::is_exist(string s){
 void symbol_table::add_variable(string s,int line){
     st[s]=line;
 }
+int symbol_table::get_variable(string s){
+    if(st.find(s)==st.end()){return -1;}
+    return st[s];
+}
 symbol_table::~symbol_table(){
 
 }
