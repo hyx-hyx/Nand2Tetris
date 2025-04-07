@@ -19,7 +19,7 @@ private:
 public:
     parser();
     bool has_more_commands(ifstream& in);
-    void parse(symbol_table symtab);
+    void parse(symbol_table& symtab);
     string get_dest();
     void set_dest(string dest);
     string get_comp();

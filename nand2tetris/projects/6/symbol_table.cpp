@@ -38,14 +38,20 @@ void symbol_table::lable_map(ifstream& in){
         size_t last = instruction.find_last_not_of(" \t\n\r\f\v");
         instruction=instruction.substr(first, last - first + 1);
 
-        if(instruction[0]=='('&&instruction[instruction.size()-1]==')'){
+        if(instruction[0]=='/'&&instruction[1]=='/'){
+            continue;
+        }else if(instruction[0]=='('&&instruction[instruction.size()-1]==')'){
             string label=instruction.substr(1,instruction.size()-2);
             st[label]=line_cnt;
-        }else{line_cnt++;}
+        }else{
+            line_cnt++;
+        }
     }
+    in.clear();
+    in.seekg(0,ios::beg);
 }
 bool symbol_table::is_exist(string s){
-    return st.find(s)==st.end();
+    return st.find(s)!=st.end();
 }
 void symbol_table::add_variable(string s,int line){
     st[s]=line;

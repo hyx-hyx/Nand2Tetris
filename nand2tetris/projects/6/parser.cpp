@@ -16,11 +16,14 @@ bool parser::has_more_commands(ifstream& in){
         if(instruction[0]=='/'&&instruction[1]=='/'){
             continue;
         }
+        if(instruction[0]=='('&&instruction[instruction.size()-1]==')'){
+            continue;
+        }
         return true;
     }
     return false;
 }
-void parser::parse(symbol_table symtab){
+void parser::parse(symbol_table& symtab){
     set_address("");set_comp("");set_dest("");set_jmp("");
     if(instruction[0]=='@'){
         type=0;
@@ -32,7 +35,9 @@ void parser::parse(symbol_table symtab){
             if(symtab.is_exist(s)){
                 set_address(std::to_string(symtab.get_variable(s)));
             }else{
-                symtab.add_variable(s,symtab.var_addr++);
+                symtab.add_variable(s,symtab.var_addr);
+                set_address(std::to_string(symtab.var_addr));
+                symtab.var_addr++;
             }
         }
     }else{
@@ -100,7 +105,7 @@ string parser::to_string(){
     +"dest: "+dest+'\n'
     +"comp: "+comp+'\n'
     +"jmp: "+jmp+'\n'
-    +"address: "+address+'\n';
+    +"address: "+address;
 }
 
 int parser::get_type(){
