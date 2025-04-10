@@ -1,6 +1,6 @@
 #include<iostream>
 #include<fstream>
-#include"./parser.h"
+#include"parser.h"
 #include"code_write.h"
 using namespace std;
 int main(){

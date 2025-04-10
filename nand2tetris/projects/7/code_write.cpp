@@ -96,8 +96,10 @@ void code_write::write_arithmetic(parser p)
 
 //access segment data,assign to D Register
 void code_write::memory_access(string segname,int arg2){
+    *out<<"@"<<arg2<<endl;
+    *out<<"D=A"<<endl;
     *out<<"@"<<umap[segname]<<endl;
-    *out<<"A=M+"<<arg2<<endl;
+    *out<<"A=M+D"<<endl;
 }
 void code_write::write_push_pop(parser p)
 {
@@ -113,8 +115,16 @@ void code_write::write_push_pop(parser p)
             *out<<"D=M"<<endl;
             write_push();
         }else{
+            *out<<"@"<<arg2<<endl;
+            *out<<"D=A"<<endl;
+            *out<<"@"<<this->umap[arg1]<<endl;
+            *out<<"A=M+D"<<endl;
+            *out<<"D=A"<<endl;
+            *out<<"@addr"<<endl;
+            *out<<"M=D"<<endl;
             write_pop();
-            memory_access(arg1,arg2);
+            *out<<"@addr"<<endl;
+            *out<<"A=M"<<endl;
             *out<<"M=D"<<endl;
         }
     }else if(arg1=="constant"){
@@ -149,13 +159,24 @@ void code_write::write_push_pop(parser p)
         }
     }else if(arg1=="temp"){
         if(type==C_PUSH){ 
-            *out<<"@5+"<<arg2<<endl;
-            *out<<"D=M"<<endl;  
+            *out<<"@5"<<endl;
+            *out<<"D=A"<<endl;
+            *out<<"@"<<arg2<<endl;
+            *out<<"A=A+D"<<endl;
+            *out<<"D=M"<<endl;
             write_push();
         }else{
+            *out<<"@5"<<endl;
+            *out<<"D=A"<<endl;
+            *out<<"@"<<arg2<<endl;
+            *out<<"D=A+D"<<endl;
+            *out<<"@addr"<<endl;
+            *out<<"M=D"<<endl;
             write_pop();
-            *out<<"@5+"<<arg2<<endl;
-            *out<<"M=D"<<endl;  
+            *out<<"@addr"<<endl;
+            *out<<"A=M"<<endl;
+            *out<<"M=D"<<endl;
+           
         }
     }
     
