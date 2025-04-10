@@ -1,0 +1,4 @@
+**/*.exe
+.vscode/
+nand2tetris/projects/7/**/*.asm
+**/*.out

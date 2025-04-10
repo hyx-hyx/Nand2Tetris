@@ -1,11 +1,10 @@
 #include"parser.h"
 
-parser::parser(string path):type(C_NULL),command(NULL){
-    in=new ifstream(path,ios::in);
+parser::parser():type(C_NULL){
 }
 
-bool parser::has_more_commands(){
-    while(getline(*in,command)){
+bool parser::has_more_commands(ifstream& in){
+    while(getline(in,command)){
         // 找到第一个非空格字符的位置
         size_t first = command.find_first_not_of(" \t\n\r\f\v");
         if (first == std::string::npos) {
@@ -62,5 +61,31 @@ void parser::parse(){
     }
 }
 
+string parser::get_command()
+{
+    return command;
+}
 
+command_type parser::get_command_type()
+{
+    return type;
+}
 
+string parser::get_arg1()
+{
+    return arg1;
+}
+
+int parser::get_arg2()
+{
+    return arg2;
+}
+
+void parser::set_filename(string filename){
+    this->filename=filename;
+}
+
+string parser::get_filename()
+{
+    return filename;
+}
