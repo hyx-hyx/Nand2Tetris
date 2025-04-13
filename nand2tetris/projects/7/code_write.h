@@ -23,6 +23,7 @@ private:
     void write_push();
     void write_pop();
     void memory_access(string segname,int arg2);
+    void write_bool_op();
 };
 
 

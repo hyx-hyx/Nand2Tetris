@@ -24,15 +24,16 @@ void code_write::write_push(){
     *out<<"A=M"<<endl;
     *out<<"M=D"<<endl;
     *out<<"@SP"<<endl;
-    *out<<"A=M+1"<<endl;
+    *out<<"M=M+1"<<endl;
 }
 
 void code_write::write_pop(){
     *out<<"@SP"<<endl;
-    *out<<"A=M-1"<<endl;
+    *out<<"AM=M-1"<<endl;
     *out<<"D=M"<<endl;
 }
 
+void code_write::write_bool_op(){}
 
 // 操作数1 放在R13,操作数2放在R14
     // @SP
@@ -66,6 +67,9 @@ void code_write::write_arithmetic_op(string op){
     }else if(op=="neg"){
         *out<<"D=-D"<<endl;
     }else if(op=="eq"){
+        *out<<"D=D-M"<<endl;
+
+        *out<<"D;JEQ"<<endl;
     }else if(op=="gt"){
     }else if(op=="lt"){
     }else if(op=="and"){
@@ -87,8 +91,7 @@ void code_write::write_arithmetic(parser p)
     *out<<"M=D"<<endl;
 
     write_pop();
-    *out<<"@"<<"R14"<<endl;
-    *out<<"M=D"<<endl;
+    *out<<"@"<<"R13"<<endl;
 
     write_arithmetic_op(p.get_arg1());
     write_push();
@@ -118,8 +121,7 @@ void code_write::write_push_pop(parser p)
             *out<<"@"<<arg2<<endl;
             *out<<"D=A"<<endl;
             *out<<"@"<<this->umap[arg1]<<endl;
-            *out<<"A=M+D"<<endl;
-            *out<<"D=A"<<endl;
+            *out<<"D=M+D"<<endl;
             *out<<"@addr"<<endl;
             *out<<"M=D"<<endl;
             write_pop();
@@ -143,10 +145,10 @@ void code_write::write_push_pop(parser p)
         }
     }
     else if(arg1=="pointer"){
-        if(arg2=='0'){
-            arg1="this";
+        if(arg2==0){
+            arg1="THIS";
         }else{
-            arg1="that";
+            arg1="THAT";
         }
         if(type==C_PUSH){  
             *out<<"@"<<arg1<<endl;

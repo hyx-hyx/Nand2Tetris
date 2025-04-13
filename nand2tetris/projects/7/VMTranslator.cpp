@@ -4,7 +4,7 @@
 #include"code_write.h"
 using namespace std;
 int main(){
-    string path="MemoryAccess\\BasicTest\\BasicTest.vm";
+    string path="StackArithmetic\\StackTest\\StackTest.vm";
     ifstream in(path,ios::in);
     parser p;
     string filename=path.substr(path.find_last_of('\\')+1,path.find_last_of('.')-path.find_last_of('\\')-1);
