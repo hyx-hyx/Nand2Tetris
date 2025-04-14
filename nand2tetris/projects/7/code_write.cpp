@@ -33,17 +33,15 @@ void code_write::write_pop(){
     *out<<"D=M"<<endl;
 }
 
-void code_write::write_bool_op(){}
-
 // 操作数1 放在R13,操作数2放在R14
     // @SP
-    // A=M-1;
+    // AM=M-1;
     // D=M;
     // @R13
     // M=D;
 
     // @SP
-    // A=M-1;
+    // AM=M-1;
     // D=M;
     // @R14
     // M=D;
@@ -58,43 +56,119 @@ void code_write::write_bool_op(){}
     //M=D
     //@SP
     //M=M+1
-
-void code_write::write_arithmetic_op(string op){
-    if(op=="add"){
-        *out<<"D=D+M"<<endl;
-    }else if(op=="sub"){
-        *out<<"D=D-M"<<endl;
-    }else if(op=="neg"){
-        *out<<"D=-D"<<endl;
-    }else if(op=="eq"){
-        *out<<"D=D-M"<<endl;
-
-        *out<<"D;JEQ"<<endl;
-    }else if(op=="gt"){
-    }else if(op=="lt"){
-    }else if(op=="and"){
-        *out<<"D=D&M"<<endl;
-    }else if(op=="or"){
-        *out<<"D=D|M"<<endl;
-    }else if(op=="not"){
-        *out<<"D=!D"<<endl;
-    }else{
-        throw std::invalid_argument("arithmetic operation is not allowed."); // 抛出异常
-    }
-}
 void code_write::write_arithmetic(parser p)
 {
     assert(p.get_command_type()==C_ARITHMETIC);
+    string op=p.get_arg1();
+    if(op=="add"){
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+        
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        
+        *out<<"D=M+D"<<endl;
+        write_push();
+    }else if(op=="sub"){
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+        
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M-D"<<endl;
+        
+        write_push();
+    }else if(op=="neg"){
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+        *out<<"D=-D"<<endl;
+        write_push();
+    }else if(op=="eq"){
+        nextlabel+=1;
 
-    write_pop();
-    *out<<"@"<<"R13"<<endl;
-    *out<<"M=D"<<endl;
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
 
-    write_pop();
-    *out<<"@"<<"R13"<<endl;
+        *out<<"@SP"<<endl;
+        *out<<"A=M-1"<<endl;
+        *out<<"D=M-D"<<endl;
+        *out<<"M=-1"<<endl;
+        *out<<"@eqtrue"<<nextlabel<<endl;
+        *out<<"D;JEQ"<<endl;
+        *out<<"@SP"<<endl;
+        *out<<"A=M-1"<<endl;
+        *out<<"M=0"<<endl;
+        *out<<"(eqtrue"<<nextlabel<<")"<<endl;
 
-    write_arithmetic_op(p.get_arg1());
-    write_push();
+    }else if(op=="gt"){
+        nextlabel+=1;
+
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+
+        *out<<"@SP"<<endl;
+        *out<<"A=M-1"<<endl;
+        *out<<"D=M-D"<<endl;
+        *out<<"M=-1"<<endl;
+        *out<<"@gttrue"<<nextlabel<<endl;
+        *out<<"D;JGT"<<endl;
+        *out<<"@SP"<<endl;
+        *out<<"A=M-1"<<endl;
+        *out<<"M=0"<<endl;
+        *out<<"(gttrue"<<nextlabel<<")"<<endl;
+
+    }else if(op=="lt"){
+        nextlabel+=1;
+
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+
+        *out<<"@SP"<<endl;
+        *out<<"A=M-1"<<endl;
+        *out<<"D=M-D"<<endl;
+        *out<<"M=-1"<<endl;
+        *out<<"@lttrue"<<nextlabel<<endl;
+        *out<<"D;JLT"<<endl;
+        *out<<"@SP"<<endl;
+        *out<<"A=M-1"<<endl;
+        *out<<"M=0"<<endl;
+        *out<<"(lttrue"<<nextlabel<<")"<<endl;
+    }else if(op=="and"){
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+        
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+
+        *out<<"D=D&M"<<endl;
+        write_push();
+    }else if(op=="or"){
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+        
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+
+        *out<<"D=D|M"<<endl;
+        write_push();
+    }else if(op=="not"){
+        *out<<"@SP"<<endl;
+        *out<<"AM=M-1"<<endl;
+        *out<<"D=M"<<endl;
+        *out<<"D=!D"<<endl;
+        write_push();
+    }else{
+        throw std::invalid_argument("arithmetic operation is not allowed."); // 抛出异常
+    }
+    
 }
 
 //access segment data,assign to D Register
