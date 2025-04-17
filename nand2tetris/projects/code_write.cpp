@@ -278,13 +278,76 @@ void code_write::write_if(string label){
     *out<<"D;JNE"<<endl;
 }
 void code_write::write_function(string fn_name,int nvars){
-    //*out<<"("+label+")"<<endl;
+    *out<<"("+fn_name+")"<<endl;
+    for(int i=0;i<nvars;++i){
+        *out<<"@0"<<endl;   
+        write_push();
+    }
 }
 void code_write::write_call(string fn_name,int nargs){
-    //*out<<"("+label+")"<<endl;
+
+    //Save the caller’s segment pointers
+    *out<<"@LCL"<<endl;
+    *out<<"D=M"<<endl;
+    write_push();
+
+    *out<<"@ARG"<<endl;
+    *out<<"D=M"<<endl;
+    write_push();
+    
+    *out<<"@THIS"<<endl;
+    *out<<"D=M"<<endl;
+    write_push();
+
+    *out<<"@THAT"<<endl;
+    *out<<"D=M"<<endl;
+    write_push();
+
+    //Reposition ARG (for the callee)
+    *out<<"@"<<5+nargs<<endl;
+    *out<<"D=A"<<endl;
+    *out<<"@SP"<<endl;
+    *out<<"D=M-D"<<endl;
+    *out<<"@ARG"<<endl;
+    *out<<"M=D"<<endl;
+
+    //Reposition LCL (for the callee)
+    *out<<"@SP"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@LCL"<<endl;
+    *out<<"M=D"<<endl;
+    
+
+    //Go to execute the callee’s code
+    *out<<"@"+fn_name<<endl;
+    *out<<"0;JMP"<<endl;
+
 }
 void code_write::write_return(){
-    //*out<<"("+label+")"<<endl;
+    //endFrame = LCL   gets the address at the frame’s end
+    *out<<"@LCL"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@endFrame"<<endl;
+    *out<<"M=D"<<endl;
+
+    //retAddr = *(endFrame – 5)  gets the return address
+    *out<<"@endFrame"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@5"<<endl;
+    *out<<"D=D-A"<<endl;
+    *out<<"@retAddr"<<endl;
+    *out<<"M=D"<<endl;
+    
+    write_pop();
+    *out<<"@ARG"<<endl;
+    *out<<"M=D"<<endl;
+
+    //Recycle the memory used by the callee
+    *out<<"@ARG"<<endl;
+    *out<<"D=M+1"<<endl;
+    *out<<"@SP"<<endl;
+    *out<<"M=D"<<endl;
+
 }
 string code_write::get_output_command(){
     return output_command;
