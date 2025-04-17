@@ -15,7 +15,16 @@ void code_write::write(parser p)
         write_arithmetic(p);
     }else if(p.get_command_type()==C_PUSH||p.get_command_type()==C_POP){
         write_push_pop(p);
-    }else{}
+    }else if(p.get_command_type()==C_LABEL){
+        write_label(p.get_arg1());
+    }else if(p.get_command_type()==C_GOTO){
+        write_goto(p.get_arg1());
+    }else if(p.get_command_type()==C_IF){
+        write_if(p.get_arg1());
+    }else if(p.get_command_type()==C_FUNCTION){
+    }else if(p.get_command_type()==C_CALL){
+    }else if(p.get_command_type()==C_RETURN){
+    }
     *out<<endl;
 }
 
@@ -255,9 +264,28 @@ void code_write::write_push_pop(parser p)
            
         }
     }
-    
 }
-
+void code_write::write_label(string label){
+    *out<<"("+label+")"<<endl;
+}
+void code_write::write_goto(string label){
+    *out<<"@"+label<<endl;
+    *out<<"0;JMP"<<endl;
+}
+void code_write::write_if(string label){
+    write_pop();
+    *out<<"@"+label<<endl;
+    *out<<"D;JNE"<<endl;
+}
+void code_write::write_function(string fn_name,int nvars){
+    //*out<<"("+label+")"<<endl;
+}
+void code_write::write_call(string fn_name,int nargs){
+    //*out<<"("+label+")"<<endl;
+}
+void code_write::write_return(){
+    //*out<<"("+label+")"<<endl;
+}
 string code_write::get_output_command(){
     return output_command;
 }

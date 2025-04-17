@@ -1,4 +1,6 @@
 **/*.exe
-.vscode/
+.vscode/*.json
 nand2tetris/projects/7/**/*.asm
 **/*.out
+**/*.dat
+nand2tetris/projects/8/**/*.asm

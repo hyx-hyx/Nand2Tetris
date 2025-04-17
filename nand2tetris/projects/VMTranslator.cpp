@@ -26,10 +26,7 @@ vector<string> listFiles(const filesystem::path& directory) {
     }
     return filepath;
 }
-
-int main(){
-    vector<string> filepath=listFiles(".\\8\\FunctionCalls\\StaticsTest");
-    string path=filepath[0];
+void parse_file(string path){
     ifstream in(path,ios::in);
     parser p;
     string filename=path.substr(path.find_last_of('\\')+1,path.find_last_of('.')-path.find_last_of('\\')-1);
@@ -42,5 +39,10 @@ int main(){
         cw.write(p);
     }
     in.close();
+}
+
+int main(){
+    vector<string> filepath=listFiles(".\\8\\ProgramFlow\\FibonacciSeries");
+    parse_file(filepath[0]);
     return 0;
 }

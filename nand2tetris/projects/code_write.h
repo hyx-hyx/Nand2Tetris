@@ -22,6 +22,12 @@ private:
     void write_push_pop(parser p);
     void write_push();
     void write_pop();
+    void write_label(string label);
+    void write_goto(string label);
+    void write_if(string label);
+    void write_function(string fn_name,int nvars);
+    void write_call(string fn_name,int nargs);
+    void write_return();
     void memory_access(string segname,int arg2);
 };
 

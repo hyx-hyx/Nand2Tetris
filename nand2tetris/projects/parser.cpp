@@ -10,12 +10,21 @@ bool parser::has_more_commands(ifstream& in){
         if (first == std::string::npos) {
             continue;
         }
-        // 找到最后一个非空格字符的位置
-        size_t last = command.find_last_not_of(" \t\n\r\f\v");
-        command=command.substr(first, last - first + 1);
-        if(command[0]=='/'&&command[1]=='/'){
+        if(command[first]=='/'&&command[first+1]=='/'){
             continue;
         }
+        
+        size_t last = command.find_first_of("//");
+        command=command.substr(first, last - first);
+
+        // 找到最后一个非空格字符的位置
+        last=command.find_last_not_of(" \t\n\r\f\v");
+        if (last == std::string::npos) {
+            continue;
+        }
+        
+        command=command.substr(0, last + 1);
+        
         return true;
     }
     return false;
@@ -55,6 +64,24 @@ void parser::parse(){
         type=C_POP;
         arg1=tokens[1];
         arg2=stoi(tokens[2]);
+    }else if(tokens[0]=="label"){
+        type=C_LABEL;
+        arg1=tokens[1];
+    }else if(tokens[0]=="goto"){
+        type=C_GOTO;
+        arg1=tokens[1];
+    }else if(tokens[0]=="if-goto"){
+        type=C_IF;
+        arg1=tokens[1];
+    }else if(tokens[0]=="function"){
+        type=C_FUNCTION;
+        arg1=tokens[1];
+        arg2=stoi(tokens[2]);
+    }else if(tokens[0]=="call"){
+        type=C_CALL;
+        arg1=tokens[1];
+    }else if(tokens[0]=="return"){
+        type=C_RETURN;
     }else{
        type=C_ARITHMETIC; 
        arg1=tokens[0];
