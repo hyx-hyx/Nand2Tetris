@@ -12,6 +12,7 @@ private:
     unordered_map<string,string>umap;
     int nextlabel=0;
     int ret_label=0;
+    int static_label=0;
 public:
     code_write(ofstream* out);
     void write(parser p);

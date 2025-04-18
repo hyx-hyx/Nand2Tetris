@@ -25,9 +25,7 @@ void parse_file(code_write& cw,string path,ios::openmode mode){
     parser p;
     
     int last=path.find_last_of("\\");
-    path=path.substr(0,last);
-    last=path.find_last_of('\\')+1;
-    string filename=path.substr(last,path.size());
+    string filename=path.substr(last+1,path.find_last_of(".")-1-last);
     p.set_filename(filename);
 
     while(p.has_more_commands(in)){
@@ -51,8 +49,8 @@ int main(int argc,char** argv){
         parse_file(cw,string(argv[1]),ios::out);
     }else{
         vector<string> filepath=listFiles(string(argv[1]));
-        for(int i=filepath.size()-1;i>=0;--i){
-            if(i==1){
+        for(int i=0;i<filepath.size();++i){
+            if(i==0){
                 parse_file(cw,filepath[i],ios::out);
             }else{
                 parse_file(cw,filepath[i],ios::out|ios::app);
