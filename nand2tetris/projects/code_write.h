@@ -4,7 +4,6 @@
 #include"parser.h"
 #include<iostream>
 #include<assert.h>
-
 class code_write
 {
 private:
@@ -12,6 +11,7 @@ private:
     string output_command;
     unordered_map<string,string>umap;
     int nextlabel=0;
+    int ret_label=0;
 public:
     code_write(ofstream* out);
     void write(parser p);

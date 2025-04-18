@@ -80,6 +80,7 @@ void parser::parse(){
     }else if(tokens[0]=="call"){
         type=C_CALL;
         arg1=tokens[1];
+        arg2=stoi(tokens[2]);
     }else if(tokens[0]=="return"){
         type=C_RETURN;
     }else{

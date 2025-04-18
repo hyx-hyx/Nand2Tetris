@@ -7,12 +7,6 @@ using namespace std;
 
 vector<string> listFiles(const filesystem::path& directory) {
     vector<string> filepath;
-    // 检查目录是否存在
-    if (!filesystem::exists(directory) || !filesystem::is_directory(directory)) {
-        std::cerr << "指定路径不存在或不是一个目录：" << directory << std::endl;
-        return filepath;
-    }
-
     // 遍历目录
     for (const auto& entry : filesystem::directory_iterator(directory)) {
         if (filesystem::is_regular_file(entry)
@@ -26,14 +20,16 @@ vector<string> listFiles(const filesystem::path& directory) {
     }
     return filepath;
 }
-void parse_file(string path){
+void parse_file(code_write& cw,string path,ios::openmode mode){
     ifstream in(path,ios::in);
     parser p;
-    string filename=path.substr(path.find_last_of('\\')+1,path.find_last_of('.')-path.find_last_of('\\')-1);
+    
+    int last=path.find_last_of("\\");
+    path=path.substr(0,last);
+    last=path.find_last_of('\\')+1;
+    string filename=path.substr(last,path.size());
     p.set_filename(filename);
-    string output_path=path.substr(0,path.find_last_of('.'))+".asm";
-    ofstream out(output_path,ios::out);
-    code_write cw(&out);
+
     while(p.has_more_commands(in)){
         p.parse();
         cw.write(p);
@@ -41,8 +37,27 @@ void parse_file(string path){
     in.close();
 }
 
-int main(){
-    vector<string> filepath=listFiles(".\\8\\ProgramFlow\\FibonacciSeries");
-    parse_file(filepath[0]);
+int main(int argc,char** argv){
+    // get output file path
+    string path(argv[1]);
+    int last=path.find_last_of("\\");
+    string filename=path.substr(last+1,path.size());
+    string output_path=path+"\\"+filename+".asm";
+    
+    ofstream out(output_path,ios::out);
+    code_write cw(&out);
+
+    if(!filesystem::is_directory(filesystem::path(string(argv[1])))){
+        parse_file(cw,string(argv[1]),ios::out);
+    }else{
+        vector<string> filepath=listFiles(string(argv[1]));
+        for(int i=filepath.size()-1;i>=0;--i){
+            if(i==1){
+                parse_file(cw,filepath[i],ios::out);
+            }else{
+                parse_file(cw,filepath[i],ios::out|ios::app);
+            }
+        }
+    }
     return 0;
 }

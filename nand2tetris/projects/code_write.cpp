@@ -6,6 +6,13 @@ code_write::code_write(ofstream* out) : out(out){
     umap["argument"]="ARG";
     umap["this"]="THIS";
     umap["that"]="THAT";
+    
+    *out<<"@256"<<endl;
+    *out<<"D=A"<<endl;
+    *out<<"@SP"<<endl;
+    *out<<"M=D"<<endl;
+
+    write_call("Sys.init",0);
 }
 
 void code_write::write(parser p)
@@ -22,8 +29,11 @@ void code_write::write(parser p)
     }else if(p.get_command_type()==C_IF){
         write_if(p.get_arg1());
     }else if(p.get_command_type()==C_FUNCTION){
+        write_function(p.get_arg1(),p.get_arg2());
     }else if(p.get_command_type()==C_CALL){
+        write_call(p.get_arg1(),p.get_arg2());
     }else if(p.get_command_type()==C_RETURN){
+        write_return();
     }
     *out<<endl;
 }
@@ -280,11 +290,16 @@ void code_write::write_if(string label){
 void code_write::write_function(string fn_name,int nvars){
     *out<<"("+fn_name+")"<<endl;
     for(int i=0;i<nvars;++i){
-        *out<<"@0"<<endl;   
+        *out<<"@0"<<endl; 
+        *out<<"D=A"<<endl;  
         write_push();
     }
 }
 void code_write::write_call(string fn_name,int nargs){
+    //Save the return address
+    *out<<"@"+fn_name+"$ret."+to_string(ret_label)<<endl;
+    *out<<"D=A"<<endl;
+    write_push();
 
     //Save the caller’s segment pointers
     *out<<"@LCL"<<endl;
@@ -321,9 +336,11 @@ void code_write::write_call(string fn_name,int nargs){
     //Go to execute the callee’s code
     *out<<"@"+fn_name<<endl;
     *out<<"0;JMP"<<endl;
-
+    *out<<"("+fn_name+"$ret."+to_string(ret_label)+")"<<endl;
+    ret_label++;
 }
 void code_write::write_return(){
+
     //endFrame = LCL   gets the address at the frame’s end
     *out<<"@LCL"<<endl;
     *out<<"D=M"<<endl;
@@ -335,18 +352,65 @@ void code_write::write_return(){
     *out<<"D=M"<<endl;
     *out<<"@5"<<endl;
     *out<<"D=D-A"<<endl;
+    *out<<"A=D"<<endl;
+    *out<<"D=M"<<endl;
     *out<<"@retAddr"<<endl;
     *out<<"M=D"<<endl;
     
+    //*ARG = pop()
     write_pop();
     *out<<"@ARG"<<endl;
+    *out<<"A=M"<<endl;
     *out<<"M=D"<<endl;
 
-    //Recycle the memory used by the callee
+    //SP = ARG + 1
     *out<<"@ARG"<<endl;
     *out<<"D=M+1"<<endl;
     *out<<"@SP"<<endl;
     *out<<"M=D"<<endl;
+
+    //THAT = *(endFrame – 1)
+    *out<<"@endFrame"<<endl;
+    *out<<"D=M-1"<<endl;
+    *out<<"A=D"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@THAT"<<endl;
+    *out<<"M=D"<<endl;
+    
+    //THIS = *(endFrame – 2)
+    *out<<"@endFrame"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@2"<<endl;
+    *out<<"D=D-A"<<endl;
+    *out<<"A=D"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@THIS"<<endl;
+    *out<<"M=D"<<endl;
+
+    //ARG = *(endFrame – 3)
+    *out<<"@endFrame"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@3"<<endl;
+    *out<<"D=D-A"<<endl;
+    *out<<"A=D"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@ARG"<<endl;
+    *out<<"M=D"<<endl;
+
+    //LCL = *(endFrame – 4)
+    *out<<"@endFrame"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@4"<<endl;
+    *out<<"D=D-A"<<endl;
+    *out<<"A=D"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@LCL"<<endl;
+    *out<<"M=D"<<endl;
+
+    //goto retAddr
+    *out<<"@retAddr"<<endl;
+    *out<<"A=M"<<endl;
+    *out<<"0;JMP"<<endl;
 
 }
 string code_write::get_output_command(){
