@@ -52,29 +52,6 @@ void code_write::write_pop(){
     *out<<"D=M"<<endl;
 }
 
-// 操作数1 放在R13,操作数2放在R14
-    // @SP
-    // AM=M-1;
-    // D=M;
-    // @R13
-    // M=D;
-
-    // @SP
-    // AM=M-1;
-    // D=M;
-    // @R14
-    // M=D;
-
-    //@R13
-    //D=M
-    //@R14
-    //D=D OP M
-    
-    //@SP
-    //A=M
-    //M=D
-    //@SP
-    //M=M+1
 void code_write::write_arithmetic(parser p)
 {
     assert(p.get_command_type()==C_ARITHMETIC);
@@ -106,83 +83,26 @@ void code_write::write_arithmetic(parser p)
         *out<<"D=-D"<<endl;
         write_push();
     }else if(op=="eq"){
-        nextlabel+=1;
-
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-        *out<<"D=M"<<endl;
-
-        *out<<"@SP"<<endl;
-        *out<<"A=M-1"<<endl;
-        *out<<"D=M-D"<<endl;
-        *out<<"M=-1"<<endl;
-        *out<<"@eqtrue"<<nextlabel<<endl;
-        *out<<"D;JEQ"<<endl;
-        *out<<"@SP"<<endl;
-        *out<<"A=M-1"<<endl;
-        *out<<"M=0"<<endl;
-        *out<<"(eqtrue"<<nextlabel<<")"<<endl;
-
+        write_arithmetic_compare("EQ");
     }else if(op=="gt"){
-        nextlabel+=1;
-
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-        *out<<"D=M"<<endl;
-
-        *out<<"@SP"<<endl;
-        *out<<"A=M-1"<<endl;
-        *out<<"D=M-D"<<endl;
-        *out<<"M=-1"<<endl;
-        *out<<"@gttrue"<<nextlabel<<endl;
-        *out<<"D;JGT"<<endl;
-        *out<<"@SP"<<endl;
-        *out<<"A=M-1"<<endl;
-        *out<<"M=0"<<endl;
-        *out<<"(gttrue"<<nextlabel<<")"<<endl;
-
+        write_arithmetic_compare("GT");
     }else if(op=="lt"){
-        nextlabel+=1;
-
+        write_arithmetic_compare("LT");
+    }else if(op=="and"||op=="or"||op=="not"){
         *out<<"@SP"<<endl;
         *out<<"AM=M-1"<<endl;
         *out<<"D=M"<<endl;
-
-        *out<<"@SP"<<endl;
-        *out<<"A=M-1"<<endl;
-        *out<<"D=M-D"<<endl;
-        *out<<"M=-1"<<endl;
-        *out<<"@lttrue"<<nextlabel<<endl;
-        *out<<"D;JLT"<<endl;
-        *out<<"@SP"<<endl;
-        *out<<"A=M-1"<<endl;
-        *out<<"M=0"<<endl;
-        *out<<"(lttrue"<<nextlabel<<")"<<endl;
-    }else if(op=="and"){
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-        *out<<"D=M"<<endl;
-        
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-
-        *out<<"D=D&M"<<endl;
-        write_push();
-    }else if(op=="or"){
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-        *out<<"D=M"<<endl;
-        
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-
-        *out<<"D=D|M"<<endl;
-        write_push();
-    }else if(op=="not"){
-        *out<<"@SP"<<endl;
-        *out<<"AM=M-1"<<endl;
-        *out<<"D=M"<<endl;
-        *out<<"D=!D"<<endl;
+        if(op=="and"||op=="or"){
+            *out<<"@SP"<<endl;
+            *out<<"AM=M-1"<<endl;
+            if(op=="and"){
+                *out<<"D=D&M"<<endl;
+            }else{
+                *out<<"D=D|M"<<endl; 
+            }
+        }else{
+            *out<<"D=!D"<<endl;
+        }
         write_push();
     }else{
         throw std::invalid_argument("arithmetic operation is not allowed."); // 抛出异常
@@ -190,6 +110,24 @@ void code_write::write_arithmetic(parser p)
     
 }
 
+void code_write::write_arithmetic_compare(string op){
+    nextlabel+=1;
+
+    *out<<"@SP"<<endl;
+    *out<<"AM=M-1"<<endl;
+    *out<<"D=M"<<endl;
+
+    *out<<"@SP"<<endl;
+    *out<<"A=M-1"<<endl;
+    *out<<"D=M-D"<<endl;
+    *out<<"M=-1"<<endl;
+    *out<<"@"<<op<<"TRUE"<<nextlabel<<endl;
+    *out<<"D;J"<<op<<endl;
+    *out<<"@SP"<<endl;
+    *out<<"A=M-1"<<endl;
+    *out<<"M=0"<<endl;
+    *out<<"("<<op<<"TRUE"<<nextlabel<<")"<<endl;
+}
 //access segment data,assign to D Register
 void code_write::memory_access(string segname,int arg2){
     *out<<"@"<<arg2<<endl;
@@ -339,6 +277,20 @@ void code_write::write_call(string fn_name,int nargs){
     *out<<"("+fn_name+"$ret."+to_string(ret_label)+")"<<endl;
     ret_label++;
 }
+void code_write::write_restore_segment(string seg,int bias){
+    *out<<"@endFrame"<<endl;
+    if(bias==1){
+        *out<<"D=M-1"<<endl; 
+    }else{
+        *out<<"D=M"<<endl; 
+        *out<<"@"<<bias<<endl;
+        *out<<"D=D-A"<<endl;
+    }
+    *out<<"A=D"<<endl;
+    *out<<"D=M"<<endl;
+    *out<<"@"<<seg<<endl;
+    *out<<"M=D"<<endl;
+}
 void code_write::write_return(){
 
     //endFrame = LCL   gets the address at the frame’s end
@@ -348,14 +300,7 @@ void code_write::write_return(){
     *out<<"M=D"<<endl;
 
     //retAddr = *(endFrame – 5)  gets the return address
-    *out<<"@endFrame"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@5"<<endl;
-    *out<<"D=D-A"<<endl;
-    *out<<"A=D"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@retAddr"<<endl;
-    *out<<"M=D"<<endl;
+    write_restore_segment("retAddr",5);
     
     //*ARG = pop()
     write_pop();
@@ -370,42 +315,16 @@ void code_write::write_return(){
     *out<<"M=D"<<endl;
 
     //THAT = *(endFrame – 1)
-    *out<<"@endFrame"<<endl;
-    *out<<"D=M-1"<<endl;
-    *out<<"A=D"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@THAT"<<endl;
-    *out<<"M=D"<<endl;
+    write_restore_segment("THAT",1);
     
     //THIS = *(endFrame – 2)
-    *out<<"@endFrame"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@2"<<endl;
-    *out<<"D=D-A"<<endl;
-    *out<<"A=D"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@THIS"<<endl;
-    *out<<"M=D"<<endl;
+    write_restore_segment("THIS",2);
 
     //ARG = *(endFrame – 3)
-    *out<<"@endFrame"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@3"<<endl;
-    *out<<"D=D-A"<<endl;
-    *out<<"A=D"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@ARG"<<endl;
-    *out<<"M=D"<<endl;
+    write_restore_segment("ARG",3);
 
     //LCL = *(endFrame – 4)
-    *out<<"@endFrame"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@4"<<endl;
-    *out<<"D=D-A"<<endl;
-    *out<<"A=D"<<endl;
-    *out<<"D=M"<<endl;
-    *out<<"@LCL"<<endl;
-    *out<<"M=D"<<endl;
+    write_restore_segment("LCL",4);
 
     //goto retAddr
     *out<<"@retAddr"<<endl;

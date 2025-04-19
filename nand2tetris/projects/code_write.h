@@ -19,6 +19,7 @@ public:
     string get_output_command();
     ~code_write();
 private:
+    void write_arithmetic_compare(string op);
     void write_arithmetic(parser p);
     void write_push_pop(parser p);
     void write_push();
@@ -28,6 +29,7 @@ private:
     void write_if(string label);
     void write_function(string fn_name,int nvars);
     void write_call(string fn_name,int nargs);
+    void write_restore_segment(string seg,int bias);
     void write_return();
     void memory_access(string segname,int arg2);
 };
