@@ -31,9 +31,7 @@ int main(int argc,char** argv){
     vector<string> filepath=listFiles(string(argv[1]));
     for(int i=0;i<filepath.size();++i){
         JackTokenizer tokenizer(filepath[i]);
-        while(tokenizer.has_more_token()){
-            cout<<tokenizer.get_type()<<tokenizer.get_val()<<endl;
-        }
+        tokenizer.has_more_token();
     }
     return 0;
 }

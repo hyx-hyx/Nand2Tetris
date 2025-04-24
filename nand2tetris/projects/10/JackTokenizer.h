@@ -23,7 +23,7 @@ private: /* data */
     string filename;
     set<string> keyword;
     set<string> symbol;
-    Token cur_token;
+    vector<Token> tokens;
     ifstream in;
 public:
     JackTokenizer(string filename);
@@ -31,5 +31,6 @@ public:
     Token get_token();
     LEXICAL_ELEMENTS get_type();
     string get_val();
+    void match_token(string line);
     ~JackTokenizer();
 };
