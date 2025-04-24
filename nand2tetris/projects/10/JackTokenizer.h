@@ -4,6 +4,7 @@
 #include<filesystem>
 #include<vector>
 #include<set>
+#include"JackTokenizerIterator.h"
 using namespace std;
 enum LEXICAL_ELEMENTS{KEYWORD,SYMBOL,INTEGERCONSTANT,STRINGCONSTANT,IDENTIFIER};
 class Token
@@ -28,9 +29,14 @@ private: /* data */
 public:
     JackTokenizer(string filename);
     bool has_more_token();
-    Token get_token();
-    LEXICAL_ELEMENTS get_type();
-    string get_val();
     void match_token(string line);
+
+    
+    JackTokenizerIterator begin() const { return JackTokenizerIterator(&tokens[0]); }
+    JackTokenizerIterator end() const { return JackTokenizerIterator() }
+
+    // 提供对元素的访问
+    Token& operator[](size_t index) { return tokens[index]; }
+    const T& operator[](size_t index) const { return tokens[index]; }
     ~JackTokenizer();
 };

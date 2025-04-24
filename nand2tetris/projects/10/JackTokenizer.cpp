@@ -94,19 +94,6 @@ bool JackTokenizer::has_more_token()
     return false;
 }
 
-Token JackTokenizer::get_token(){
-    return cur_token;
-}
-
-LEXICAL_ELEMENTS JackTokenizer::get_type()
-{
-    return cur_token.type;
-}
-
-string JackTokenizer::get_val()
-{
-    return cur_token.val;
-}
 
 JackTokenizer::~JackTokenizer()
 {
