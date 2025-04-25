@@ -31,7 +31,11 @@ int main(int argc,char** argv){
     vector<string> filepath=listFiles(string(argv[1]));
     for(int i=0;i<filepath.size();++i){
         JackTokenizer tokenizer(filepath[i]);
-        tokenizer.has_more_token();
+        tokenizer.parse();
+        vector<Token> tokens=tokenizer.get_tokens();
+        string output_filepath=filepath[i].replace(filepath[i].begin()+filepath[i].find_last_of("."),filepath[i].end(),"T_output.xml");
+        ofstream out_token(output_filepath,ios::out);
+        tokenizer.print_tokens(out_token);
     }
     return 0;
 }

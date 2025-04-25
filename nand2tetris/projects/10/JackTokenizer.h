@@ -4,20 +4,10 @@
 #include<filesystem>
 #include<vector>
 #include<set>
-#include"JackTokenizerIterator.h"
+#include"Token.h"
+//#include"JackTokenizerIterator.h"
+
 using namespace std;
-enum LEXICAL_ELEMENTS{KEYWORD,SYMBOL,INTEGERCONSTANT,STRINGCONSTANT,IDENTIFIER};
-class Token
-{
-public:
-    LEXICAL_ELEMENTS type;
-    string val;
-public:
-    Token(LEXICAL_ELEMENTS type,string val);
-    Token();
-};
-
-
 class JackTokenizer
 {
 private: /* data */
@@ -28,15 +18,19 @@ private: /* data */
     ifstream in;
 public:
     JackTokenizer(string filename);
-    bool has_more_token();
+    void parse();
+    void pre_process(string& line);
     void match_token(string line);
+    vector<Token> get_tokens();
 
-    
-    JackTokenizerIterator begin() const { return JackTokenizerIterator(&tokens[0]); }
-    JackTokenizerIterator end() const { return JackTokenizerIterator() }
+    // JackTokenizerIterator begin() const { return JackTokenizerIterator(&tokens[0]); }
+    // JackTokenizerIterator end() const { return JackTokenizerIterator() }
 
     // 提供对元素的访问
-    Token& operator[](size_t index) { return tokens[index]; }
-    const T& operator[](size_t index) const { return tokens[index]; }
+    // Token& operator[](size_t index) { return tokens[index]; }
+    // const Token& operator[](size_t index) const { return tokens[index]; }
+
+    void print_tokens(ostream& out=std::cout);
+    
     ~JackTokenizer();
 };

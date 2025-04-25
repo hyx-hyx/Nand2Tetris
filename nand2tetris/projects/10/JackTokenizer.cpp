@@ -1,9 +1,6 @@
 #include "JackTokenizer.h"
 #include<regex>
 
-Token::Token(LEXICAL_ELEMENTS type,string val) : type(type),val(val){}
-Token::Token(){}
-
 JackTokenizer::JackTokenizer(string filename){
     this->filename=filename;
     keyword=set<string>{"class","constructor","function","method",
@@ -14,6 +11,24 @@ JackTokenizer::JackTokenizer(string filename){
     symbol=set<string>{"{","}","(",")","[","]",".",",",";","+","-","*",
                         "/","&",",","<",">","=","~"};
     in=ifstream(filename);
+}
+void JackTokenizer::pre_process(string& line){
+    //去除空格
+    if(line.find_first_not_of(" \t")!=string::npos){
+        line=line.substr(line.find_first_not_of(' '));
+    }
+
+    //去除//单行注释
+    int pos;
+    if(pos=line.find("//")!=string::npos){
+        line.erase(line.begin()+pos-1,line.end());
+    }
+
+    //去除/* */ 和 /** */ 注释
+    if(pos=line.find("/*")!=string::npos){
+        int endpos=line.find("*/");
+        line=line.substr(endpos+2,line.size()-endpos-2);
+    }
 }
 void JackTokenizer::match_token(string line){
     // 开始匹配关键字
@@ -63,37 +78,29 @@ void JackTokenizer::match_token(string line){
         token_val="";
     }
 }
-bool JackTokenizer::has_more_token()
+vector<Token> JackTokenizer::get_tokens()
+{
+    return tokens;
+}
+void JackTokenizer::parse()
 {
     char c;
     string line;
     while(getline(in,line)){
-        //去除空格
-        if(line.find_first_not_of(" \t")!=string::npos){
-            line=line.substr(line.find_first_not_of(' '));
-        }
-
-        //去除//单行注释
-        int pos;
-        if(pos=line.find("//")!=string::npos){
-            line.erase(line.begin()+pos-1,line.end());
-        }
-        if(line.empty()){continue;}
-        
-        //去除/* */ 和 /** */ 注释
-        if(pos=line.find("/*")!=string::npos){
-            int endpos=line.find("*/");
-            line=line.substr(endpos+2,line.size()-endpos-2);
-        }
-        if(line.empty()){continue;}
+        pre_process(line);
         match_token(line);
-        for(int i=0;i<tokens.size();++i){
-            cout<<tokens[i].type<<" "<<tokens[i].val<<endl;
-        }
     }   
-    return false;
 }
 
+void JackTokenizer::print_tokens(ostream& out){
+    out<<"<tokens>"<<endl;
+    for(int i=0;i<tokens.size();++i){
+        out<<"<"<<tokens[i].get_type_str()<<"> "
+            <<tokens[i].get_val()<<" "
+            <<"</"<<tokens[i].get_type_str()<<"> "<<endl;
+    }
+    out<<"</tokens>"<<endl;
+}
 
 JackTokenizer::~JackTokenizer()
 {

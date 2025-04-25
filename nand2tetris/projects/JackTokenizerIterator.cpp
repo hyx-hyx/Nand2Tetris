@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iterator> // 包含标准迭代器相关的定义
 #include <JackTokenizer.h>
-#include <JackTokenizerIterator.h>
+#include "JackTokenizerIterator.h"
 
 // 构造函数
 JackTokenizerIterator::JackTokenizerIterator(Token* p) : ptr(p) {}
