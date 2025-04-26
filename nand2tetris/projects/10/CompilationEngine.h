@@ -5,6 +5,7 @@
 #include<string>
 #include"Token.h"
 #include<vector>
+#include<set>
 
 using namespace std;
 class CompilationEngine
@@ -12,13 +13,14 @@ class CompilationEngine
 private:
     /* data */
     string output_filepath;
-    ofstream out;
+    ostream& out;
     vector<Token> tokens;
-    Token cur_token;
     int token_index=0;
+    Token cur_token;
     
 public:
     CompilationEngine(string output_filepath,vector<Token> tokens);
+    CompilationEngine(vector<Token> tokens);
 
     bool has_more_token();
     void advance();
@@ -39,6 +41,8 @@ public:
     void compile_term(int depth);
     void compile_expression_list(int depth);
     
+    void process(string str,int depth);
+    void process(set<string> set,int depth);
     void print_token_with_indent(Token token,int indent);
 
     ~CompilationEngine();

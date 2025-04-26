@@ -3,6 +3,7 @@
 #include<filesystem>
 #include<vector>
 #include<JackTokenizer.h>
+#include<CompilationEngine.h>
 using namespace std;
 
 vector<string> listFiles(const filesystem::path& directory) {
@@ -32,10 +33,18 @@ int main(int argc,char** argv){
     for(int i=0;i<filepath.size();++i){
         JackTokenizer tokenizer(filepath[i]);
         tokenizer.parse();
+
         vector<Token> tokens=tokenizer.get_tokens();
-        string output_filepath=filepath[i].replace(filepath[i].begin()+filepath[i].find_last_of("."),filepath[i].end(),"T_output.xml");
+        
+        string output_filepath=filepath[i];
+        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"T_output.xml");
         ofstream out_token(output_filepath,ios::out);
         tokenizer.print_tokens(out_token);
+
+        output_filepath=filepath[i];
+        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"_output.xml");
+        CompilationEngine ce(output_filepath,tokenizer.get_tokens());
+        ce.compile();
     }
     return 0;
 }

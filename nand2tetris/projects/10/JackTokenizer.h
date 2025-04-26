@@ -16,6 +16,7 @@ private: /* data */
     set<string> symbol;
     vector<Token> tokens;
     ifstream in;
+    bool multi_line=false; //multi line comment
 public:
     JackTokenizer(string filename);
     void parse();

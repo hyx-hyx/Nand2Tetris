@@ -26,8 +26,13 @@ string Token::get_val()
 }
 ostream &operator<<(ostream &os, Token &t)
 {
-    os<<"<"<<t.get_type_str()<<"> "
-            <<t.get_val()<<" "
-            <<"</"<<t.get_type_str()<<"> "<<endl;
+    if(t.get_type()==NULLELEMENT){
+        return os<<t.get_val();
+    }else{
+        return os<<"<"<<t.get_type_str()<<"> "
+                <<t.get_val()<<" "
+                <<"</"<<t.get_type_str()<<"> ";
+    }
+    
 }
 

@@ -9,7 +9,7 @@ JackTokenizer::JackTokenizer(string filename){
                     "false","null","this","let",
                     "do","if","else","while","return"};
     symbol=set<string>{"{","}","(",")","[","]",".",",",";","+","-","*",
-                        "/","&",",","<",">","=","~"};
+                        "/","&","|","<",">","=","~"};
     in=ifstream(filename);
 }
 void JackTokenizer::pre_process(string& line){
@@ -18,16 +18,31 @@ void JackTokenizer::pre_process(string& line){
         line=line.substr(line.find_first_not_of(' '));
     }
 
+    if(line.empty()){return ;}
+
     //去除//单行注释
-    int pos;
-    if(pos=line.find("//")!=string::npos){
-        line.erase(line.begin()+pos-1,line.end());
+    int pos=line.find("//");
+    if(pos!=string::npos){
+        line=line.substr(0,line.begin()+pos-line.begin());
     }
 
+    if(line.empty()){return ;}
+
     //去除/* */ 和 /** */ 注释
-    if(pos=line.find("/*")!=string::npos){
-        int endpos=line.find("*/");
-        line=line.substr(endpos+2,line.size()-endpos-2);
+    if((pos=line.find("/*"))!=string::npos){
+        int endpos;
+        if((endpos=line.find("*/"))==string::npos){
+            multi_line=true;
+            line.clear();
+            return ;
+        }else{
+            line=line.substr(endpos+2,line.size()-endpos-2);
+            multi_line=false;
+        }
+    }
+    if(line[0]=='*'&&multi_line){
+        line.clear();
+        return ;
     }
 }
 void JackTokenizer::match_token(string line){

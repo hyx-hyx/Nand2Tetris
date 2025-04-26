@@ -3,8 +3,12 @@
 using namespace std;
 
 CompilationEngine::CompilationEngine(string output_filepath,vector<Token> tokens)
-    :output_filepath(output_filepath),tokens(tokens),token_index(0){
-    out=ofstream(output_filepath,ios::out);
+    :output_filepath(output_filepath),tokens(tokens),token_index(0),cur_token(tokens[token_index])
+        ,out(*new std::ofstream(output_filepath, std::ios::out)){
+}
+
+CompilationEngine::CompilationEngine(vector<Token> tokens)
+    :tokens(tokens),token_index(0),cur_token(tokens[token_index]),out(cout){
 }
 
 bool CompilationEngine::has_more_token()
@@ -24,373 +28,404 @@ void CompilationEngine::advance()
 void CompilationEngine::compile()
 {
     cur_token=tokens[token_index];
+    compile_class(0);
 }
 
 void CompilationEngine::compile_class(int depth)
 {
-    for(int i=0;i<depth;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"<class>"<<endl;
-    advance();
-    print_token_with_indent(cur_token,depth+1);
-    advance();
-    print_token_with_indent(cur_token,depth+1);
-    advance();
-    while(cur_token.get_val()=="static"||cur_token.get_val()=="field"){
-        compile_class_vardec(depth+1);
-    }
-    while(cur_token.get_val()=="static"||cur_token.get_val()=="field"||cur_token.get_val()=="field"){
-        compile_subroutine_dec(depth+1);
-    }
-    print_token_with_indent(cur_token,depth+1);
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<class>"),depth);
 
-    for(int i=0;i<depth;++i){
-        cout<<"\t"<<endl;
+    process("class",nextdepth);
+
+    print_token_with_indent(cur_token,nextdepth);
+    advance();
+
+    process("{",nextdepth);
+
+    while(cur_token.get_val()=="static"||cur_token.get_val()=="field"){
+        compile_class_vardec(nextdepth);
     }
-    cout<<"</class>"<<endl;
+    while(cur_token.get_val()=="constructor"||cur_token.get_val()=="function"||cur_token.get_val()=="method"){
+        compile_subroutine_dec(nextdepth);
+    }
+    print_token_with_indent(cur_token,nextdepth);
+
+    print_token_with_indent(Token(NULLELEMENT,"</class>"),depth);
 }
 
 void CompilationEngine::compile_class_vardec(int depth)
 {
-    for(int i=0;i<depth;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"<classVarDec>"<<endl;
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<classVarDec>"),depth);
 
     //('static'|'field')
-    print_token_with_indent(cur_token,depth+1);
+    process(set<string>{"static","field"},nextdepth);
     
     //type
-    advance();
-    if(cur_token.get_val()=="int"||cur_token.get_val()=="char"||cur_token.get_val()=="boolean"||cur_token.get_type()==LEXICAL_ELEMENTS::IDENTIFIER){
-        print_token_with_indent(cur_token,depth+1);
-    }
+    process(set<string>{"int","char","boolean",""},nextdepth);
     
     //varName
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("",nextdepth);
 
     //(','varName)*
-    advance();
     while(cur_token.get_val()==","){
-        print_token_with_indent(cur_token,depth+1);
+        print_token_with_indent(cur_token,nextdepth);
         advance();
-        print_token_with_indent(cur_token,depth+1);
+
+        process("",nextdepth);
     }
 
-    //';'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process(";",nextdepth);
 
-    for(int i=0;i<depth;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"</classVarDec>"<<endl;
+    print_token_with_indent(Token(NULLELEMENT,"</classVarDec>"),depth);
 }
 
 void CompilationEngine::compile_subroutine_dec(int depth)
 {
-    for(int i=0;i<depth;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"<subroutineDec>"<<endl;
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<subroutineDec>"),depth);
 
     //('constructor'|'function'|'method')
-    advance();
-    if(cur_token.get_val()=="constructor"||cur_token.get_val()=="function"||cur_token.get_val()=="method"){
-        print_token_with_indent(cur_token,depth+1);
-    }
+    process(set<string>{"constructor","function","method"},nextdepth);
 
     //('void'|type)
-    advance();
-    if(cur_token.get_val()=="void"||cur_token.get_val()=="int"||cur_token.get_val()=="char"
-        ||cur_token.get_val()=="boolean"||cur_token.get_type()==LEXICAL_ELEMENTS::IDENTIFIER){
-        print_token_with_indent(cur_token,depth+1);
-    }
+    process(set<string>{"int","char","boolean","void",""},nextdepth);
 
     // subroutineName
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("",nextdepth);
 
     // '('
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("(",nextdepth);
 
     // parameter_list
-    compile_parameter_list(depth+1);
+    compile_parameter_list(nextdepth);
     
     // ')'
-    print_token_with_indent(cur_token,depth+1);
+    process(")",nextdepth);
 
     // subroutineBody
-    compile_subroutine_body(depth+1);
+    compile_subroutine_body(nextdepth);
     
-    for(int i=0;i<depth;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"</subroutineDec>"<<endl;
+    print_token_with_indent(Token(NULLELEMENT,"</subroutineDec>"),depth);
+
 }
 
 void CompilationEngine::compile_parameter_list(int depth)
 {
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<parameterList>"),depth);
+
     if(cur_token.get_val()=="int"||cur_token.get_val()=="char"
         ||cur_token.get_val()=="boolean"||cur_token.get_type()==LEXICAL_ELEMENTS::IDENTIFIER){
-        print_token_with_indent(cur_token,depth+1);
+        print_token_with_indent(cur_token,nextdepth);
         advance();
-        print_token_with_indent(cur_token,depth+1);
 
-        advance();
+        process("",nextdepth);
+
         while(cur_token.get_val()==","){
-            print_token_with_indent(cur_token,depth+1);
+            process(",",nextdepth);
+            
+            //type
+            process(set<string>{"int","char","boolean",""},nextdepth);
 
-            advance();
-            if(cur_token.get_val()=="int"||cur_token.get_val()=="char"
-                ||cur_token.get_val()=="boolean"||cur_token.get_type()==LEXICAL_ELEMENTS::IDENTIFIER){
-                print_token_with_indent(cur_token,depth+1);
-            }
-            advance();
-            print_token_with_indent(cur_token,depth+1);
-
-            advance();
+            process("",nextdepth);
         }
     }
+
+    print_token_with_indent(Token(NULLELEMENT,"</parameterList>"),depth);
 }
 
 void CompilationEngine::compile_subroutine_body(int depth)
 {
-    for(int i=0;i<depth+1;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"<subroutineBody>"<<endl;
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<subroutineBody>"),depth);
 
     //'{'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("{",nextdepth);
 
     //varDec*
-    advance();
     while(cur_token.get_val()=="var"){
-        compile_vardec(depth+1);
-        advance();
+        compile_vardec(nextdepth);
     }
 
     // statements
-    compile_statements(depth+1);
+    compile_statements(nextdepth);
 
     //'}'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("}",nextdepth);
 
-    for(int i=0;i<depth+1;++i){
-        cout<<"\t"<<endl;
-    }
-    cout<<"</subroutineBody>"<<endl;
+    print_token_with_indent(Token(NULLELEMENT,"</subroutineBody>"),depth);
 }
 
 void CompilationEngine::compile_vardec(int depth)
 {
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<varDec>"),depth);
     // 'var'
-    print_token_with_indent(cur_token,depth+1);
+    process("var",nextdepth);
 
     //'type'
-    advance();
-    if(cur_token.get_val()=="int"||cur_token.get_val()=="char"
-        ||cur_token.get_val()=="boolean"||cur_token.get_type()==LEXICAL_ELEMENTS::IDENTIFIER){
-        print_token_with_indent(cur_token,depth+1);
-    }
+    process(set<string>{"int","char","boolean",""},nextdepth);
 
     //varName
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("",nextdepth);
 
     //(','varName)*
     while(cur_token.get_val()==","){
-        print_token_with_indent(cur_token,depth+1);
-
-        // varName
-        advance();
-        print_token_with_indent(cur_token,depth+1);
+        print_token_with_indent(cur_token,nextdepth);
 
         advance();
+        process("",nextdepth);
     }
 
     //';'
-    print_token_with_indent(cur_token,depth+1);
+    process(";",nextdepth);
+
+    print_token_with_indent(Token(NULLELEMENT,"</varDec>"),depth);
 }
 
 void CompilationEngine::compile_statements(int depth)
 {
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<statements>"),depth);
     string token_val=cur_token.get_val();
     while(token_val!="}"){
         if(token_val=="let"){
-            compile_let(depth+1);
+            compile_let(nextdepth);
         }else if(token_val=="if"){
-            compile_if(depth+1);
+            compile_if(nextdepth);
         }else if(token_val=="while"){
-            compile_while(depth+1);
+            compile_while(nextdepth);
         }else if(token_val=="do"){
-            compile_do(depth+1);
+            compile_do(nextdepth);
         }else {
-            compile_return(depth+1);
+            compile_return(nextdepth);
         }
-        
-        advance();
+        token_val=cur_token.get_val();
     }
+
+    print_token_with_indent(Token(NULLELEMENT,"</statements>"),depth);
 
 }
 
 void CompilationEngine::compile_let(int depth)
 {
-    print_token_with_indent(cur_token,depth+1);
+    int nextdepth=depth+1;
 
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"<letStatement>"),depth);
 
-    advance();
+    process("let",nextdepth);
+
+    //varName
+    process("",nextdepth);
+
     if(cur_token.get_val()=="["){
-        print_token_with_indent(cur_token,depth+1);
-
+        process("[",nextdepth);
         //expression
-        compile_expression(depth+1);
-
-        advance();
-        print_token_with_indent(cur_token,depth+1);
-
+        compile_expression(nextdepth);
+        process("]",nextdepth);
     }
 
     //'='
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("=",nextdepth);
 
-    compile_expression(depth+1);
+    compile_expression(nextdepth);
 
     //';'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process(";",nextdepth);
+
+    print_token_with_indent(Token(NULLELEMENT,"</letStatement>"),depth);
 }
 
 void CompilationEngine::compile_if(int depth)
 {
-    print_token_with_indent(cur_token,depth+1);
+    int nextdepth=depth+1;
 
-    //'('
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"<ifStatement>"),depth);
+
+    process("if",nextdepth);
+    process("(",nextdepth);
 
     //expression
-    compile_expression(depth+1);
+    compile_expression(nextdepth);
 
-    //')'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process(")",nextdepth);
+    process("{",nextdepth);
 
-    //'{'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    compile_statements(nextdepth);
 
-    compile_statements(depth+1);
-
-    //'}'
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("}",nextdepth);
 
     // ('else''{'statements'}')?
-    advance();
     if(cur_token.get_val()=="else"){
-        print_token_with_indent(cur_token,depth+1);
-
-        advance();
-        print_token_with_indent(cur_token,depth+1);
-
-        compile_statements(depth+1);
-
-        advance();
-        print_token_with_indent(cur_token,depth+1);
+        process("else",nextdepth);
+        process("{",nextdepth);
+        compile_statements(nextdepth);
+        process("}",nextdepth);
     }
+
+    print_token_with_indent(Token(NULLELEMENT,"</ifStatement>"),depth);
 }
 
 void CompilationEngine::compile_while(int depth)
 {
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"<whileStatement>"),depth);
 
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    int nextdepth=depth+1;
 
-    compile_expression(depth+1);
+    process("while",nextdepth);
+    process("(",nextdepth);
+    compile_expression(nextdepth);
+    process(")",nextdepth);
 
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    process("{",nextdepth);
+    compile_statements(nextdepth);
+    process("}",nextdepth);
 
-    advance();
-    print_token_with_indent(cur_token,depth+1);
-
-    compile_statements(depth+1);
-
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"</whileStatement>"),depth);
 }
 
 void CompilationEngine::compile_do(int depth)
 {
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"<doStatement>"),depth);
 
-    advance();
-    print_token_with_indent(cur_token,depth+1);
-    
-    advance();
-    print_token_with_indent(cur_token,depth+1);
-    if(cur_token.get_val()=="."){
-        advance();
-        print_token_with_indent(cur_token,depth+1);
-        
-        advance();
-        print_token_with_indent(cur_token,depth+1);
+    int nextdepth=depth+1;
 
+    process("do",nextdepth);
+
+    //subroutineCall
+    process("",nextdepth);
+    if(cur_token.get_val()=="("){
+        process("(",nextdepth);
+        compile_expression_list(nextdepth);
+        process(")",nextdepth);
+    }else if(cur_token.get_val()=="."){
+        process(".",nextdepth);
+        process("",nextdepth);
+        process("(",nextdepth);
+        compile_expression_list(nextdepth);
+        process(")",nextdepth);
     }
 
-    advance();
-    compile_expression_list(depth+1);
+    process(";",nextdepth);
 
-    advance();
-    print_token_with_indent(cur_token,depth+1);
-
-    advance();
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"</doStatement>"),depth);
 }
 
 void CompilationEngine::compile_return(int depth)
 {
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"<returnStatement>"),depth);
 
-    advance();
+    int nextdepth=depth+1;
+    
+    process("return",nextdepth);
     if(cur_token.get_val()!=";"){
-        compile_expression(depth+1);
-        advance();
+        compile_expression(nextdepth);
     }
+    process(";",nextdepth);
 
-    print_token_with_indent(cur_token,depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"</returnStatement>"),depth);
 }
 
 void CompilationEngine::compile_expression(int depth)
 {
-    compile_term(depth+1);
+    print_token_with_indent(Token(NULLELEMENT,"<expression>"),depth);
+    
+    int nextdepth=depth+1;
+
+    compile_term(nextdepth);
+    
+    set<string> op{"+","-","*","/","&","|","<",">","="};
+    while(op.count(cur_token.get_val())){
+        process(op,nextdepth);
+        compile_term(nextdepth);
+    }
+    
+    print_token_with_indent(Token(NULLELEMENT,"</expression>"),depth);
 }
 
 void CompilationEngine::compile_term(int depth)
 {
-    
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<term>"),depth);
+
+    if(cur_token.get_type()==INTEGERCONSTANT||cur_token.get_type()==STRINGCONSTANT
+        ||set<string>{"true","false","null","this"}.count(cur_token.get_val())){
+        process("",nextdepth);
+    }else if(set<string>{"~","-"}.count(cur_token.get_val())){
+        process("",nextdepth);
+        compile_term(nextdepth);
+    }else if(cur_token.get_val()=="("){
+        process("(",nextdepth);
+        compile_expression(nextdepth);
+        process(")",nextdepth);
+    }else if(cur_token.get_type()==IDENTIFIER){
+        Token old_token=cur_token;
+        process("",nextdepth);
+
+        if(cur_token.get_val()=="["){
+            process("[",nextdepth);
+            compile_expression(nextdepth);
+            process("]",nextdepth);
+        }else if(cur_token.get_val()=="("){
+            process("(",nextdepth);
+            compile_expression_list(nextdepth);
+            process(")",nextdepth);
+        }else if(cur_token.get_val()=="."){
+            process(".",nextdepth);
+            process("",nextdepth);
+            process("(",nextdepth);
+            compile_expression_list(nextdepth);
+            process(")",nextdepth);
+        }
+
+    }
+    print_token_with_indent(Token(NULLELEMENT,"</term>"),depth);
 }
 
 void CompilationEngine::compile_expression_list(int depth)
 {
+    int nextdepth=depth+1;
+    print_token_with_indent(Token(NULLELEMENT,"<expressionList>"),depth);
+    
+    if(cur_token.get_val()!=")"){
+        compile_expression(depth+1);
 
+        while(cur_token.get_val()==","){
+            process(",",depth+1);
+            compile_expression(depth+1);
+        }
+    }
+    print_token_with_indent(Token(NULLELEMENT,"</expressionList>"),depth);
+}
+
+void CompilationEngine::process(string str,int depth)
+{
+    if(cur_token.get_val()==str||str==""){
+        print_token_with_indent(cur_token,depth);
+    }else{
+        out<<"syntax error!"<<endl;
+    }
+    advance();
+}
+
+void CompilationEngine::process(set<string> set,int depth)
+{
+    if(set.count(cur_token.get_val())||set.count("")){
+        print_token_with_indent(cur_token,depth);
+    }else{
+        out<<"syntax error!"<<endl;
+    }
+    advance();
 }
 
 void CompilationEngine::print_token_with_indent(Token token, int indent)
 {
-    for(int i=0;i<indent;++i){cout<<"\t"<<endl;}
-    cout<<token<<endl;
+    for(int i=0;i<indent;++i){cout<<"  ";}
+    if(!token.get_val().empty()){
+        out<<token<<endl;
+    }
 }
 
-CompilationEngine::~CompilationEngine() { out.close(); }
+CompilationEngine::~CompilationEngine() { out.clear(); }
