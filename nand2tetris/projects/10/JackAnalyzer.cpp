@@ -3,6 +3,7 @@
 #include<filesystem>
 #include<vector>
 #include<JackTokenizer.h>
+#include<assert.h>
 #include<CompilationEngine.h>
 using namespace std;
 
@@ -27,6 +28,17 @@ vector<string> listFiles(const filesystem::path& directory) {
     return filepath;
 }
 
+string get_output_filepath(string filepath,int type){
+    assert(type<=2);
+    string output_filepath=filepath;
+    string filename=filepath.substr(filepath.find_last_of("\\")+1,filepath.find_last_of(".")-filepath.find_last_of('\\')-1);
+    if(type==1){
+        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("\\"),output_filepath.end(),"\\out\\"+filename+"T_output.xml");
+    }else{
+        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("\\"),output_filepath.end(),"\\out\\"+filename+"_output.xml");
+    }
+    return output_filepath;
+}
 
 int main(int argc,char** argv){
     vector<string> filepath=listFiles(string(argv[1]));
@@ -36,14 +48,10 @@ int main(int argc,char** argv){
 
         vector<Token> tokens=tokenizer.get_tokens();
         
-        string output_filepath=filepath[i];
-        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"\\out\\T_output.xml");
-        ofstream out_token(output_filepath,ios::out);
+        ofstream out_token(get_output_filepath(filepath[i],1),ios::out);
         tokenizer.print_tokens(out_token);
 
-        output_filepath=filepath[i];
-        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"\\out\\_output.xml");
-        CompilationEngine ce(output_filepath,tokenizer.get_tokens());
+        CompilationEngine ce(get_output_filepath(filepath[i],2),tokenizer.get_tokens());
         ce.compile();
     }
     return 0;
