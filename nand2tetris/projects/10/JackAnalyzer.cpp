@@ -37,12 +37,12 @@ int main(int argc,char** argv){
         vector<Token> tokens=tokenizer.get_tokens();
         
         string output_filepath=filepath[i];
-        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"T_output.xml");
+        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"\\out\\T_output.xml");
         ofstream out_token(output_filepath,ios::out);
         tokenizer.print_tokens(out_token);
 
         output_filepath=filepath[i];
-        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"_output.xml");
+        output_filepath.replace(output_filepath.begin()+output_filepath.find_last_of("."),output_filepath.end(),"\\out\\_output.xml");
         CompilationEngine ce(output_filepath,tokenizer.get_tokens());
         ce.compile();
     }
