@@ -422,7 +422,7 @@ void CompilationEngine::process(set<string> set,int depth)
 
 void CompilationEngine::print_token_with_indent(Token token, int indent)
 {
-    for(int i=0;i<indent;++i){cout<<"  ";}
+    for(int i=0;i<indent;++i){out<<"  ";}
     if(!token.get_val().empty()){
         out<<token<<endl;
     }
